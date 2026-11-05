@@ -60,10 +60,15 @@ The project releases a local RPM for Fedora GNOME 50+. After downloading the rel
 
 ```bash
 sudo dnf install ./charge-sentinel-0.1.0-1.fc44.noarch.rpm
+```
+
+Log out and back in before enabling the extension. GNOME Shell scans system extensions when the session starts. Then run:
+
+```bash
 gnome-extensions enable charge-sentinel@subinz1.github.io
 ```
 
-Log out and back in to load a newly installed extension on Wayland. The package installs the extension system-wide, plus the root-owned helper and its Polkit policy. It does not enable the extension automatically for every user.
+The package installs the extension system-wide, plus the root-owned helper and its Polkit policy. It does not enable the extension automatically for every user.
 
 To build the RPM from a checkout:
 
