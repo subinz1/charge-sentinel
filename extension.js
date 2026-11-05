@@ -15,6 +15,7 @@ const REFRESH_SECONDS = 20;
 const PRESETS = [
     {name: 'Desk mode', subtitle: 'Start 75% · stop 80%', start: 75, end: 80},
     {name: 'Balanced mode', subtitle: 'Start 70% · stop 85%', start: 70, end: 85},
+    {name: 'Optimal mode', subtitle: 'Start 20% · stop 95%', start: 20, end: 95},
     {name: 'Travel mode', subtitle: 'Start 96% · stop 100%', start: 96, end: 100},
 ];
 

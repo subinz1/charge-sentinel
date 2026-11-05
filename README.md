@@ -22,6 +22,7 @@ The initial target is Fedora GNOME 50+ and modern ThinkPads. The helper auto-det
 | --- | ---: | ---: | --- |
 | Desk | 75% | 80% | Laptop stays connected most of the time |
 | Balanced | 70% | 85% | Mix of desk and portable use |
+| Optimal | 20% | 95% | Your preferred broad operating range |
 | Travel | 96% | 100% | Maximum runtime for a trip |
 
 Users can set custom values as well. A wide range such as 20% → 100% is technically valid on supported ThinkPads, but it is not the default because it does not limit time spent at a high state of charge.
