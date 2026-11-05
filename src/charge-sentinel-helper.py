@@ -8,6 +8,8 @@ import json
 import sys
 from pathlib import Path
 
+from charge_sentinel_capabilities import detect_linux, supported_linux_batteries
+
 
 POWER_SUPPLY_ROOT = Path('/sys/class/power_supply')
 SAFE_BEHAVIOURS = {'auto', 'inhibit-charge'}
@@ -22,23 +24,7 @@ def read_text(path: Path) -> str:
 
 
 def supported_batteries() -> dict[str, Path]:
-    batteries: dict[str, Path] = {}
-    if not POWER_SUPPLY_ROOT.exists():
-        return batteries
-
-    for candidate in POWER_SUPPLY_ROOT.iterdir():
-        try:
-            if read_text(candidate / 'type') != 'Battery':
-                continue
-        except OSError:
-            continue
-
-        start = candidate / 'charge_control_start_threshold'
-        end = candidate / 'charge_control_end_threshold'
-        if start.is_file() and end.is_file():
-            batteries[candidate.name] = candidate
-
-    return batteries
+    return supported_linux_batteries(POWER_SUPPLY_ROOT)
 
 
 def battery_path(name: str) -> Path:
@@ -126,7 +112,11 @@ def status() -> dict[str, object]:
             if path.is_file():
                 values[attribute] = read_text(path)
         items.append(values)
-    return {'supported': bool(items), 'batteries': items}
+    return {
+        'supported': bool(items),
+        'batteries': items,
+        'capabilities': detect_linux(POWER_SUPPLY_ROOT).to_dict(),
+    }
 
 
 def parser() -> argparse.ArgumentParser:

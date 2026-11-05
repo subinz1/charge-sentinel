@@ -14,7 +14,7 @@ On laptops whose Linux battery driver exposes charge thresholds, Charge Sentinel
 
 It does **not** cut AC power or pretend to work on unsupported hardware. For example, ThinkPads expose these controls through `thinkpad_acpi` at `/sys/class/power_supply/BAT*/charge_control_{start,end}_threshold`.
 
-The initial target is Fedora GNOME 50+ and modern ThinkPads. The helper auto-detects supported batteries before it writes anything.
+The first fully functional target is Fedora GNOME 50+ and modern ThinkPads. The helper auto-detects supported batteries before it writes anything. The project now has a shared capability model for Windows, macOS, and ChromeOS, so their different firmware limits are represented honestly rather than treated as generic controls. See [the platform support matrix](docs/platform-support.md).
 
 ## Presets
 
@@ -30,7 +30,12 @@ Users can set custom values as well. A wide range such as 20% → 100% is techni
 ## Architecture
 
 ```text
-GNOME Shell extension
+Shared capability model
+  ├─ reports the real ranges and actions for an OS/vendor adapter
+  ├─ prevents invalid presets from being offered
+  └─ treats native-only and unsupported platforms distinctly
+
+Fedora GNOME Shell extension
   ├─ reads battery status from /sys/class/power_supply
   └─ invokes a narrowly scoped Polkit helper for changes
        └─ validates values and writes only known battery-control files

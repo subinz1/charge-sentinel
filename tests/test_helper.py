@@ -1,11 +1,13 @@
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 
 HELPER_PATH = Path(__file__).parents[1] / 'src' / 'charge-sentinel-helper.py'
+sys.path.insert(0, str(HELPER_PATH.parent))
 SPEC = importlib.util.spec_from_file_location('charge_sentinel_helper', HELPER_PATH)
 HELPER = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -36,6 +38,7 @@ class ChargeSentinelHelperTests(unittest.TestCase):
         state = HELPER.status()
         self.assertTrue(state['supported'])
         self.assertEqual(state['batteries'][0]['capacity'], '62')
+        self.assertEqual(state['capabilities']['state'], 'supported')
 
     def test_applies_thresholds_in_a_safe_order(self):
         result = HELPER.set_thresholds('BAT0', 96, 100)
