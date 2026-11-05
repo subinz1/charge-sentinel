@@ -1,4 +1,5 @@
 /dist/
+/build/
 /*.zip
 __pycache__/
 *.py[cod]

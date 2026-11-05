@@ -1,8 +1,12 @@
 UUID := charge-sentinel@subinz1.github.io
+NAME := charge-sentinel
+VERSION := 0.1.0
 SCHEMA := schemas/org.gnome.shell.extensions.charge-sentinel.gschema.xml
 DIST := dist
+RPM_TOPDIR := $(abspath build/rpmbuild)
+RPM_SOURCE := $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz
 
-.PHONY: validate test package clean
+.PHONY: validate test package rpm-source rpm clean
 
 validate:
 	glib-compile-schemas --strict --dry-run schemas
@@ -16,5 +20,12 @@ package: validate
 	mkdir -p $(DIST)
 	gnome-extensions pack --force --out-dir $(DIST) --schema $(SCHEMA) .
 
+rpm-source:
+	mkdir -p $(RPM_TOPDIR)/SOURCES
+	git archive --format=tar.gz --prefix=$(NAME)-$(VERSION)/ --output=$(RPM_SOURCE) HEAD
+
+rpm: validate rpm-source
+	rpmbuild --define "_topdir $(RPM_TOPDIR)" -ba packaging/fedora/$(NAME).spec
+
 clean:
-	rm -rf $(DIST)
+	rm -rf $(DIST) build

@@ -54,6 +54,26 @@ make package
 
 The generated extension bundle is placed in `dist/`.
 
+## Install on Fedora
+
+The project releases a local RPM for Fedora GNOME 50+. After downloading the release RPM, install it with:
+
+```bash
+sudo dnf install ./charge-sentinel-0.1.0-1.fc44.noarch.rpm
+gnome-extensions enable charge-sentinel@subinz1.github.io
+```
+
+Log out and back in to load a newly installed extension on Wayland. The package installs the extension system-wide, plus the root-owned helper and its Polkit policy. It does not enable the extension automatically for every user.
+
+To build the RPM from a checkout:
+
+```bash
+sudo dnf install rpm-build
+make rpm
+```
+
+The RPM is written to `build/rpmbuild/RPMS/noarch/`.
+
 For a local installation, review the files first, then run:
 
 ```bash

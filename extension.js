@@ -8,7 +8,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const HELPER_PATH = '/usr/local/libexec/charge-sentinel-helper';
+const HELPER_PATH = '/usr/libexec/charge-sentinel-helper';
 const POWER_SUPPLY_ROOT = '/sys/class/power_supply';
 const REFRESH_SECONDS = 20;
 
