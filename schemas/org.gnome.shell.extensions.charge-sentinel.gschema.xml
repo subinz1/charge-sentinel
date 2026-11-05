@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.charge-sentinel" path="/org/gnome/shell/extensions/charge-sentinel/">
+    <key name="custom-start" type="u">
+      <range min="1" max="99"/>
+      <default>75</default>
+      <summary>Custom start charge threshold</summary>
+      <description>Start charging once the battery is below this percentage.</description>
+    </key>
+    <key name="custom-end" type="u">
+      <range min="2" max="100"/>
+      <default>80</default>
+      <summary>Custom stop charge threshold</summary>
+      <description>Stop charging once the battery reaches this percentage.</description>
+    </key>
+    <key name="show-panel-icon" type="b">
+      <default>true</default>
+      <summary>Show the top-panel icon</summary>
+      <description>Show a Charge Sentinel status icon in the GNOME top panel.</description>
+    </key>
+  </schema>
+</schemalist>

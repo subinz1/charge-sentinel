@@ -1,0 +1,9 @@
+{
+  "uuid": "charge-sentinel@subinz1.github.io",
+  "name": "Charge Sentinel",
+  "description": "Battery charge thresholds and status in GNOME Quick Settings.",
+  "shell-version": ["50"],
+  "settings-schema": "org.gnome.shell.extensions.charge-sentinel",
+  "url": "https://github.com/subinz1/charge-sentinel",
+  "version": 1
+}
