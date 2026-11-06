@@ -19,7 +19,9 @@ class ChargeSentinelHelperTests(unittest.TestCase):
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary_directory.name)
         self.previous_root = HELPER.POWER_SUPPLY_ROOT
+        self.previous_require_root = HELPER.require_root
         HELPER.POWER_SUPPLY_ROOT = self.root
+        HELPER.require_root = lambda: None
         self.battery = self.root / 'BAT0'
         self.battery.mkdir()
         (self.battery / 'type').write_text('Battery\n', encoding='utf-8')
@@ -31,6 +33,7 @@ class ChargeSentinelHelperTests(unittest.TestCase):
 
     def tearDown(self):
         HELPER.POWER_SUPPLY_ROOT = self.previous_root
+        HELPER.require_root = self.previous_require_root
         self.temporary_directory.cleanup()
 
     def test_detects_supported_battery(self):
@@ -47,6 +50,34 @@ class ChargeSentinelHelperTests(unittest.TestCase):
     def test_rejects_invalid_thresholds(self):
         with self.assertRaises(HELPER.ChargeSentinelError):
             HELPER.set_thresholds('BAT0', 90, 80)
+
+    def test_requires_administrator_access_for_writes(self):
+        with self.assertRaises(HELPER.ChargeSentinelError):
+            self.previous_require_root(effective_user_id=1000)
+
+    def test_restores_the_previous_threshold_after_a_partial_write_failure(self):
+        original_write_value = HELPER.write_value
+
+        def fail_when_setting_start(path, value):
+            if path.name == 'charge_control_start_threshold' and value == 96:
+                raise HELPER.ChargeSentinelError('simulated firmware failure')
+            original_write_value(path, value)
+
+        HELPER.write_value = fail_when_setting_start
+        try:
+            with self.assertRaisesRegex(HELPER.ChargeSentinelError, 'previous values were restored'):
+                HELPER.set_thresholds('BAT0', 96, 100)
+        finally:
+            HELPER.write_value = original_write_value
+
+        self.assertEqual(
+            (self.battery / 'charge_control_start_threshold').read_text(encoding='utf-8'),
+            '75\n',
+        )
+        self.assertEqual(
+            (self.battery / 'charge_control_end_threshold').read_text(encoding='utf-8'),
+            '80\n',
+        )
 
     def test_only_allows_safe_charge_behaviours(self):
         result = HELPER.set_behaviour('BAT0', 'inhibit-charge')

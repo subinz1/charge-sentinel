@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,13 @@ SAFE_BEHAVIOURS = {'auto', 'inhibit-charge'}
 
 class ChargeSentinelError(RuntimeError):
     """A request cannot be safely applied to the battery controller."""
+
+
+def require_root(effective_user_id: int | None = None) -> None:
+    if effective_user_id is None:
+        effective_user_id = os.geteuid()
+    if effective_user_id != 0:
+        raise ChargeSentinelError('Changing charge settings requires administrator authentication.')
 
 
 def read_text(path: Path) -> str:
@@ -51,6 +59,7 @@ def validate_thresholds(start: int, end: int) -> None:
 
 
 def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
+    require_root()
     validate_thresholds(start, end)
     battery = battery_path(name)
     start_path = battery / 'charge_control_start_threshold'
@@ -64,14 +73,31 @@ def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
 
     # Keep every intermediate state valid while moving between presets.
     if start > current_end:
-        write_value(end_path, end)
-        write_value(start_path, start)
+        writes = [(end_path, end, current_end), (start_path, start, current_start)]
     elif end < current_start:
-        write_value(start_path, start)
-        write_value(end_path, end)
+        writes = [(start_path, start, current_start), (end_path, end, current_end)]
     else:
-        write_value(start_path, start)
-        write_value(end_path, end)
+        writes = [(start_path, start, current_start), (end_path, end, current_end)]
+
+    applied: list[tuple[Path, int]] = []
+    try:
+        for path, value, previous_value in writes:
+            if value == previous_value:
+                continue
+            write_value(path, value)
+            applied.append((path, previous_value))
+    except ChargeSentinelError as error:
+        rollback_errors: list[str] = []
+        for path, previous_value in reversed(applied):
+            try:
+                write_value(path, previous_value)
+            except ChargeSentinelError:
+                rollback_errors.append(path.name)
+        if rollback_errors:
+            raise ChargeSentinelError(
+                'Could not apply charge thresholds and could not restore ' + ', '.join(rollback_errors) + '.'
+            ) from error
+        raise ChargeSentinelError('Could not apply charge thresholds; previous values were restored.') from error
 
     return {
         'battery': name,
@@ -81,6 +107,7 @@ def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
 
 
 def set_behaviour(name: str, behaviour: str) -> dict[str, str]:
+    require_root()
     if behaviour not in SAFE_BEHAVIOURS:
         raise ChargeSentinelError('Only auto and inhibit-charge are supported.')
 
