@@ -70,6 +70,14 @@ gnome-extensions enable charge-sentinel@subinz1.github.io
 
 The package installs the extension system-wide, plus the root-owned helper and its Polkit policy. It does not enable the extension automatically for every user.
 
+If anything does not appear after login, run the read-only diagnostic command:
+
+```bash
+charge-sentinel-doctor
+```
+
+It reports missing package components and gives the exact next step without changing any charge setting.
+
 To build the RPM from a checkout:
 
 ```bash

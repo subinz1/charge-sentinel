@@ -10,7 +10,7 @@ RPM_SOURCE := $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz
 
 validate:
 	glib-compile-schemas --strict --dry-run schemas
-	python3 -m py_compile src/charge-sentinel-helper.py src/charge-sentinel-capabilities.py src/charge_sentinel_capabilities.py
+	python3 -m py_compile src/charge-sentinel-helper.py src/charge-sentinel-capabilities.py src/charge-sentinel-doctor.py src/charge_sentinel_capabilities.py
 	python3 -m unittest discover -s tests -v
 
 test:

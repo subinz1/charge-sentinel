@@ -17,6 +17,9 @@ sudo install -D -o root -g root -m 0755 \
 sudo install -D -o root -g root -m 0644 \
   "$root_dir/src/charge_sentinel_capabilities.py" \
   /usr/libexec/charge_sentinel_capabilities.py
+sudo install -D -o root -g root -m 0755 \
+  "$root_dir/src/charge-sentinel-doctor.py" \
+  /usr/bin/charge-sentinel-doctor
 sudo install -D -o root -g root -m 0644 \
   "$root_dir/polkit/io.github.subinz1.charge-sentinel.policy" \
   /usr/share/polkit-1/actions/io.github.subinz1.charge-sentinel.policy

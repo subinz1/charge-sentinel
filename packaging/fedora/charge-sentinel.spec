@@ -36,6 +36,7 @@ glib-compile-schemas %{buildroot}%{extension_dir}/schemas
 
 install -D -p -m 0755 src/charge-sentinel-helper.py %{buildroot}%{_libexecdir}/charge-sentinel-helper
 install -D -p -m 0644 src/charge_sentinel_capabilities.py %{buildroot}%{_libexecdir}/charge_sentinel_capabilities.py
+install -D -p -m 0755 src/charge-sentinel-doctor.py %{buildroot}%{_bindir}/charge-sentinel-doctor
 install -D -p -m 0644 polkit/io.github.subinz1.charge-sentinel.policy %{buildroot}%{_datadir}/polkit-1/actions/io.github.subinz1.charge-sentinel.policy
 
 %check
@@ -53,6 +54,7 @@ python3 -m unittest discover -s tests -v
 %{extension_dir}/schemas/gschemas.compiled
 %attr(0755,root,root) %{_libexecdir}/charge-sentinel-helper
 %{_libexecdir}/charge_sentinel_capabilities.py
+%attr(0755,root,root) %{_bindir}/charge-sentinel-doctor
 %{_datadir}/polkit-1/actions/io.github.subinz1.charge-sentinel.policy
 
 %changelog
