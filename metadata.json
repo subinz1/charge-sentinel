@@ -5,5 +5,5 @@
   "shell-version": ["50"],
   "settings-schema": "org.gnome.shell.extensions.charge-sentinel",
   "url": "https://github.com/subinz1/charge-sentinel",
-  "version": 1
+  "version": 2
 }

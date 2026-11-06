@@ -1,6 +1,6 @@
 UUID := charge-sentinel@subinz1.github.io
 NAME := charge-sentinel
-VERSION := 0.1.0
+VERSION := 0.1.1
 SCHEMA := schemas/org.gnome.shell.extensions.charge-sentinel.gschema.xml
 DIST := dist
 RPM_TOPDIR := $(abspath build/rpmbuild)

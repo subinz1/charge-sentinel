@@ -1,5 +1,5 @@
 Name:           charge-sentinel
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        GNOME Quick Settings battery charge protection
 
@@ -45,7 +45,7 @@ python3 -m unittest discover -s tests -v
 
 %files
 %license LICENSE
-%doc README.md docs/platform-support.md
+%doc README.md CHANGELOG.md docs/platform-support.md docs/release-checklist.md
 %{extension_dir}/metadata.json
 %{extension_dir}/extension.js
 %{extension_dir}/prefs.js
@@ -58,5 +58,8 @@ python3 -m unittest discover -s tests -v
 %{_datadir}/polkit-1/actions/io.github.subinz1.charge-sentinel.policy
 
 %changelog
+* Thu Nov 06 2026 Charge Sentinel contributors - 0.1.1-1
+- Harden threshold writes, diagnostics, and RPM verification
+
 * Thu Nov 05 2026 Charge Sentinel contributors - 0.1.0-1
 - Initial Fedora RPM release

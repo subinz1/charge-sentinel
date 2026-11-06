@@ -59,7 +59,7 @@ The generated extension bundle is placed in `dist/`.
 The project releases a local RPM for Fedora GNOME 50+. After downloading the release RPM, install it with:
 
 ```bash
-sudo dnf install ./charge-sentinel-0.1.0-1.fc44.noarch.rpm
+sudo dnf install ./charge-sentinel-0.1.1-1.fc44.noarch.rpm
 ```
 
 Log out and back in before enabling the extension. GNOME Shell scans system extensions when the session starts. Then run:
