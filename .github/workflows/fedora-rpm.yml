@@ -27,6 +27,15 @@ jobs:
         run: dnf install -y git glib2 make python3 rpm-build
       - name: Build RPM
         run: make rpm
+      - name: Verify RPM metadata and contents
+        run: make rpm-check
+      - name: Install RPM in the disposable Fedora environment
+        run: |
+          rpm_file="$(find build/rpmbuild/RPMS/noarch -name '*.rpm' -print -quit)"
+          dnf install -y "$rpm_file"
+          rpm -V charge-sentinel
+          test -x /usr/libexec/charge-sentinel-helper
+          test -x /usr/bin/charge-sentinel-doctor
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v4
         with:

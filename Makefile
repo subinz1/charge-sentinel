@@ -5,8 +5,9 @@ SCHEMA := schemas/org.gnome.shell.extensions.charge-sentinel.gschema.xml
 DIST := dist
 RPM_TOPDIR := $(abspath build/rpmbuild)
 RPM_SOURCE := $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz
+RPM_FILE := $(firstword $(wildcard $(RPM_TOPDIR)/RPMS/noarch/$(NAME)-*.noarch.rpm))
 
-.PHONY: validate test package rpm-source rpm clean
+.PHONY: validate test package rpm-source rpm rpm-check clean
 
 validate:
 	glib-compile-schemas --strict --dry-run schemas
@@ -26,6 +27,11 @@ rpm-source:
 
 rpm: validate rpm-source
 	rpmbuild --define "_topdir $(RPM_TOPDIR)" -ba packaging/fedora/$(NAME).spec
+
+rpm-check:
+	test -n "$(RPM_FILE)"
+	rpm -Kv "$(RPM_FILE)"
+	rpm -qlp "$(RPM_FILE)"
 
 clean:
 	rm -rf $(DIST) build
