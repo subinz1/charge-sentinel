@@ -14,7 +14,13 @@ On laptops whose Linux battery driver exposes charge thresholds, Charge Sentinel
 
 It does **not** cut AC power or pretend to work on unsupported hardware. For example, ThinkPads expose these controls through `thinkpad_acpi` at `/sys/class/power_supply/BAT*/charge_control_{start,end}_threshold`.
 
-The first fully functional target is Fedora GNOME 50+ and modern ThinkPads. The helper auto-detects supported batteries before it writes anything. The project now has a shared capability model for Windows, macOS, and ChromeOS, so their different firmware limits are represented honestly rather than treated as generic controls. See [the platform support matrix](docs/platform-support.md).
+The first fully functional target is Fedora with GNOME Shell 50 and modern
+ThinkPads. The extension metadata currently declares compatibility with GNOME
+Shell 50; later GNOME major versions require validation before they are claimed
+as supported. The helper auto-detects supported batteries before it writes
+anything. The project now has a shared capability model for Windows, macOS, and
+ChromeOS, so their different firmware limits are represented honestly rather
+than treated as generic controls. See [the platform support matrix](docs/platform-support.md).
 
 ## Presets
 
@@ -45,7 +51,8 @@ The GNOME extension never runs as root. The helper only accepts a battery name d
 
 ## Development
 
-Requirements: Fedora GNOME, `gjs`, `gnome-extensions`, `glib2`, Python 3, and Polkit.
+Requirements: Fedora with GNOME Shell 50, `gjs`, `gnome-extensions`, `glib2`,
+Python 3, and Polkit.
 
 ```bash
 make validate
@@ -56,7 +63,8 @@ The generated extension bundle is placed in `dist/`.
 
 ## Install on Fedora
 
-The project releases a local RPM for Fedora GNOME 50+. After downloading the release RPM, install it with:
+The project releases a local RPM for Fedora systems running GNOME Shell 50.
+After downloading the release RPM, install it with:
 
 ```bash
 sudo dnf install ./charge-sentinel-0.1.1-1.fc44.noarch.rpm
