@@ -43,7 +43,11 @@ jobs:
           dnf install -y "$rpm_file"
           rpm -V charge-sentinel
           test -x /usr/libexec/charge-sentinel-helper
+          test -r /usr/libexec/charge_sentinel_capabilities.py
           test -x /usr/bin/charge-sentinel-doctor
+          test -r /usr/share/gnome-shell/extensions/charge-sentinel@subinz1.github.io/metadata.json
+          test -r /usr/share/gnome-shell/extensions/charge-sentinel@subinz1.github.io/extension.js
+          test -r /usr/share/gnome-shell/extensions/charge-sentinel@subinz1.github.io/schemas/gschemas.compiled
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v4
         with:
