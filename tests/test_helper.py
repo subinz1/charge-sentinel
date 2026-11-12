@@ -86,5 +86,10 @@ class ChargeSentinelHelperTests(unittest.TestCase):
         with self.assertRaises(HELPER.ChargeSentinelError):
             HELPER.set_behaviour('BAT0', 'force-discharge')
 
+    def test_allows_the_bracketed_active_auto_behaviour(self):
+        result = HELPER.set_behaviour('BAT0', 'auto')
+        self.assertEqual(result['battery'], 'BAT0')
+        self.assertEqual((self.battery / 'charge_behaviour').read_text(encoding='utf-8'), 'auto\n')
+
     def test_status_is_json_serializable(self):
         json.dumps(HELPER.status())

@@ -116,8 +116,8 @@ def set_behaviour(name: str, behaviour: str) -> dict[str, str]:
     if not behaviour_path.is_file():
         raise ChargeSentinelError('This battery does not support charge behaviour control.')
 
-    advertised = read_text(behaviour_path)
-    if behaviour not in advertised.split():
+    advertised = {value.strip('[]') for value in read_text(behaviour_path).split()}
+    if behaviour not in advertised:
         raise ChargeSentinelError(f'The firmware does not support {behaviour}.')
 
     write_value(behaviour_path, behaviour)
