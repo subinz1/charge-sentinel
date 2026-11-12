@@ -37,6 +37,20 @@ def extension_is_enabled(extension_info: str) -> bool:
     return match is not None
 
 
+def extension_supports_shell(extension_root: Path, shell_version: str) -> bool:
+    match = re.search(r'GNOME Shell\s+(\d+)', shell_version, re.IGNORECASE)
+    if match is None:
+        return False
+
+    try:
+        metadata = json.loads((extension_root / 'metadata.json').read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    supported_versions = metadata.get('shell-version')
+    return isinstance(supported_versions, list) and match.group(1) in supported_versions
+
+
 def diagnose(
     extension_root: Path = EXTENSION_ROOT,
     helper_path: Path = HELPER_PATH,
@@ -56,10 +70,15 @@ def diagnose(
     checks['gnome_shell'] = shell_found
     checks['extension_visible_to_current_session'] = extension_found
     checks['extension_enabled'] = extension_found and extension_is_enabled(extension_info)
+    checks['supported_gnome_shell'] = shell_found and extension_supports_shell(extension_root, shell_version)
 
     actions: list[str] = []
     if not all(checks[key] for key in ('extension_files', 'compiled_schema', 'privileged_helper', 'polkit_policy')):
         actions.append('Reinstall the Charge Sentinel RPM to restore missing package files.')
+    elif not shell_found:
+        actions.append('Run this diagnostic from a GNOME session where gnome-shell is available.')
+    elif not checks['supported_gnome_shell']:
+        actions.append('Install a Charge Sentinel build that supports the current GNOME Shell version.')
     elif not extension_found:
         actions.append('Log out and back in, then run: gnome-extensions enable ' + UUID)
     elif not checks['extension_enabled']:
