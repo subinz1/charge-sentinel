@@ -1,9 +1,12 @@
 import importlib.util
+import io
 import json
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 
 HELPER_PATH = Path(__file__).parents[1] / 'src' / 'charge-sentinel-helper.py'
@@ -97,3 +100,20 @@ class ChargeSentinelHelperTests(unittest.TestCase):
 
     def test_status_is_json_serializable(self):
         json.dumps(HELPER.status())
+
+    def test_status_command_prints_a_machine_readable_snapshot(self):
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['charge-sentinel-helper', 'status']), redirect_stdout(output):
+            self.assertEqual(HELPER.main(), 0)
+
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload['supported'])
+        self.assertEqual(payload['batteries'][0]['name'], 'BAT0')
+
+    def test_invalid_command_values_return_a_nonzero_status(self):
+        error = io.StringIO()
+        arguments = ['charge-sentinel-helper', 'set-thresholds', 'BAT0', '90', '80']
+        with patch.object(sys, 'argv', arguments), redirect_stderr(error):
+            self.assertEqual(HELPER.main(), 1)
+
+        self.assertIn('Start threshold must be lower', error.getvalue())
