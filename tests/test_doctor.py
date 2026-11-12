@@ -18,6 +18,12 @@ def completed(arguments, **_kwargs):
     return subprocess.CompletedProcess(arguments, 1, stdout='', stderr='Extension does not exist\n')
 
 
+def disabled_extension(arguments, **_kwargs):
+    if arguments[:2] == ['gnome-shell', '--version']:
+        return subprocess.CompletedProcess(arguments, 0, stdout='GNOME Shell 50.5\n', stderr='')
+    return subprocess.CompletedProcess(arguments, 0, stdout='State: DISABLED\n', stderr='')
+
+
 class ChargeSentinelDoctorTests(unittest.TestCase):
     def test_reports_a_fresh_session_that_has_not_seen_the_extension(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -47,3 +53,25 @@ class ChargeSentinelDoctorTests(unittest.TestCase):
 
         self.assertFalse(result['healthy'])
         self.assertIn('Reinstall the Charge Sentinel RPM', result['next_steps'][0])
+
+    def test_reports_a_visible_but_disabled_extension(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            extension = root / 'extension'
+            schema = extension / 'schemas'
+            schema.mkdir(parents=True)
+            (extension / 'metadata.json').write_text('{}', encoding='utf-8')
+            (extension / 'extension.js').write_text('', encoding='utf-8')
+            (schema / 'gschemas.compiled').write_bytes(b'compiled')
+            helper = root / 'charge-sentinel-helper'
+            helper.write_text('#!/bin/sh\n', encoding='utf-8')
+            helper.chmod(0o755)
+            policy = root / 'charge-sentinel.policy'
+            policy.write_text('<policyconfig/>', encoding='utf-8')
+
+            result = DOCTOR.diagnose(extension, helper, policy, disabled_extension)
+
+        self.assertFalse(result['healthy'])
+        self.assertTrue(result['checks']['extension_visible_to_current_session'])
+        self.assertFalse(result['checks']['extension_enabled'])
+        self.assertIn('Enable the extension', result['next_steps'][0])

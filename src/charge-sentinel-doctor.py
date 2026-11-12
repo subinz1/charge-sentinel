@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 import subprocess
 from typing import Callable
 
@@ -26,6 +27,16 @@ def command_output(
     return result.returncode == 0, (result.stdout or result.stderr).strip()
 
 
+def extension_is_enabled(extension_info: str) -> bool:
+    """Return whether `gnome-extensions info` reports an enabled extension."""
+    match = re.search(
+        r'^\s*state:\s*(enabled|active)\s*$',
+        extension_info,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    return match is not None
+
+
 def diagnose(
     extension_root: Path = EXTENSION_ROOT,
     helper_path: Path = HELPER_PATH,
@@ -44,14 +55,17 @@ def diagnose(
     extension_found, extension_info = command_output(['gnome-extensions', 'info', UUID], runner)
     checks['gnome_shell'] = shell_found
     checks['extension_visible_to_current_session'] = extension_found
+    checks['extension_enabled'] = extension_found and extension_is_enabled(extension_info)
 
     actions: list[str] = []
     if not all(checks[key] for key in ('extension_files', 'compiled_schema', 'privileged_helper', 'polkit_policy')):
         actions.append('Reinstall the Charge Sentinel RPM to restore missing package files.')
     elif not extension_found:
         actions.append('Log out and back in, then run: gnome-extensions enable ' + UUID)
-    else:
+    elif not checks['extension_enabled']:
         actions.append('Enable the extension with: gnome-extensions enable ' + UUID)
+    else:
+        actions.append('Charge Sentinel is enabled for the current session.')
 
     return {
         'healthy': all(checks.values()),
