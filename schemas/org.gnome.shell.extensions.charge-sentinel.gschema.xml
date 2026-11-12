@@ -2,7 +2,7 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.charge-sentinel" path="/org/gnome/shell/extensions/charge-sentinel/">
     <key name="custom-start" type="u">
-      <range min="1" max="99"/>
+      <range min="0" max="99"/>
       <default>75</default>
       <summary>Custom start charge threshold</summary>
       <description>Start charging once the battery is below this percentage.</description>

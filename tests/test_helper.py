@@ -51,6 +51,10 @@ class ChargeSentinelHelperTests(unittest.TestCase):
         with self.assertRaises(HELPER.ChargeSentinelError):
             HELPER.set_thresholds('BAT0', 90, 80)
 
+    def test_accepts_zero_as_a_valid_start_threshold(self):
+        result = HELPER.set_thresholds('BAT0', 0, 80)
+        self.assertEqual(result, {'battery': 'BAT0', 'start': 0, 'end': 80})
+
     def test_requires_administrator_access_for_writes(self):
         with self.assertRaises(HELPER.ChargeSentinelError):
             self.previous_require_root(effective_user_id=1000)

@@ -35,7 +35,7 @@ export default class ChargeSentinelPreferences extends ExtensionPreferences {
         const startRow = thresholdRow(
             'Start charging below',
             'The charger resumes when the battery drops below this percentage.',
-            1,
+            0,
             99,
         );
         settings.bind('custom-start', startRow, 'value', Gio.SettingsBindFlags.DEFAULT);
