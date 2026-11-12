@@ -71,7 +71,12 @@ def supported_linux_batteries(power_supply_root: Path = POWER_SUPPLY_ROOT) -> di
     if not power_supply_root.exists():
         return batteries
 
-    for candidate in sorted(power_supply_root.iterdir(), key=lambda path: path.name):
+    try:
+        candidates = sorted(power_supply_root.iterdir(), key=lambda path: path.name)
+    except OSError:
+        return batteries
+
+    for candidate in candidates:
         if read_text(candidate / 'type') != 'Battery':
             continue
         if (candidate / 'charge_control_start_threshold').is_file() and (

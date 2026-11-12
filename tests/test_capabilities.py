@@ -16,6 +16,15 @@ from charge_sentinel_capabilities import (  # noqa: E402
 
 
 class ChargeCapabilitiesTests(unittest.TestCase):
+    def test_linux_handles_an_unreadable_or_invalid_power_supply_root(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory) / 'not-a-directory'
+            root.write_text('not a directory', encoding='utf-8')
+
+            capability = detect_linux(root, root / 'no-thinkpad-module')
+
+        self.assertEqual(capability.state, 'unsupported')
+
     def test_linux_selects_the_first_supported_battery_by_name(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
