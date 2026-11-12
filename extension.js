@@ -65,13 +65,18 @@ function batteryState() {
         status: readFile(`${battery.base}/status`) ?? 'Unknown',
         start: readFile(`${battery.base}/charge_control_start_threshold`) ?? '–',
         end: readFile(`${battery.base}/charge_control_end_threshold`) ?? '–',
-        behaviour: readFile(`${battery.base}/charge_behaviour`) ?? 'auto',
+        behaviour: readFile(`${battery.base}/charge_behaviour`) ?? '',
     };
 }
 
 function currentBehaviour(value) {
     const match = value.match(/\[([^\]]+)]/);
-    return match ? match[1] : 'auto';
+    if (match)
+        return match[1];
+
+    const knownBehaviours = new Set(['auto', 'inhibit-charge']);
+    const values = value.split(/\s+/).filter(item => knownBehaviours.has(item));
+    return values.length === 1 ? values[0] : 'unknown';
 }
 
 const ChargeSentinelToggle = GObject.registerClass(
