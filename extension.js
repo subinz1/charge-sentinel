@@ -150,11 +150,11 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         );
     }
 
-    _setActionVisibility(supported, canControlBehaviour) {
+    _setActionVisibility(supported, canControlBehaviour, activeBehaviour) {
         this._presetItems.forEach(item => item.visible = supported);
         this._customItem.visible = supported;
-        this._pauseItem.visible = supported && canControlBehaviour;
-        this._resumeItem.visible = supported && canControlBehaviour;
+        this._pauseItem.visible = supported && canControlBehaviour && activeBehaviour !== 'inhibit-charge';
+        this._resumeItem.visible = supported && canControlBehaviour && activeBehaviour !== 'auto';
     }
 
     _refresh() {
@@ -184,7 +184,11 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         this._statusItem.label.text =
             `${this._state.name}: ${this._state.capacity}% · ${this._state.status}\n` +
             `Charge range: ${this._state.start}% → ${this._state.end}%`;
-        this._setActionVisibility(true, this._state.behaviour.includes('inhibit-charge'));
+        this._setActionVisibility(
+            true,
+            this._state.behaviour.includes('inhibit-charge'),
+            behaviour,
+        );
         this._syncPanelIcon();
     }
 
