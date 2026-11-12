@@ -16,6 +16,20 @@ from charge_sentinel_capabilities import (  # noqa: E402
 
 
 class ChargeCapabilitiesTests(unittest.TestCase):
+    def test_linux_selects_the_first_supported_battery_by_name(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            for name in ('BAT1', 'BAT0'):
+                battery = root / name
+                battery.mkdir()
+                (battery / 'type').write_text('Battery\n', encoding='utf-8')
+                (battery / 'charge_control_start_threshold').write_text('20\n', encoding='utf-8')
+                (battery / 'charge_control_end_threshold').write_text('95\n', encoding='utf-8')
+
+            capability = detect_linux(root, root / 'no-thinkpad-module')
+
+        self.assertEqual(capability.battery, 'BAT0')
+
     def test_linux_detects_standard_threshold_files(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

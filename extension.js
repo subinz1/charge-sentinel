@@ -36,6 +36,7 @@ function findBattery() {
         let name;
         while ((name = directory.read_name()) !== null)
             names.push(name);
+        names.sort();
     } catch {
         return null;
     }
