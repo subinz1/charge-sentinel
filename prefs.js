@@ -44,7 +44,7 @@ export default class ChargeSentinelPreferences extends ExtensionPreferences {
         const endRow = thresholdRow(
             'Stop charging at',
             'The charger stops at or above this percentage.',
-            2,
+            1,
             100,
         );
         settings.bind('custom-end', endRow, 'value', Gio.SettingsBindFlags.DEFAULT);
