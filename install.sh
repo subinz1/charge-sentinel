@@ -24,5 +24,8 @@ sudo install -D -o root -g root -m 0644 \
   "$root_dir/polkit/io.github.subinz1.charge-sentinel.policy" \
   /usr/share/polkit-1/actions/io.github.subinz1.charge-sentinel.policy
 
-gnome-extensions enable "$uuid" || true
-printf 'Installed %s. Log out and back in to load a new extension on Wayland.\n' "$uuid"
+if gnome-extensions enable "$uuid"; then
+  printf 'Installed and enabled %s. Log out and back in to load a new extension on Wayland.\n' "$uuid"
+else
+  printf 'Installed %s, but it could not be enabled in this session. Log out and back in, then run charge-sentinel-doctor if it remains unavailable.\n' "$uuid" >&2
+fi
