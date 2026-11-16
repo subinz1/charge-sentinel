@@ -18,5 +18,10 @@
       <summary>Show the top-panel icon</summary>
       <description>Show a Charge Sentinel status icon in the GNOME top panel.</description>
     </key>
+    <key name="selected-battery" type="s">
+      <default>''</default>
+      <summary>Selected battery</summary>
+      <description>The supported battery selected in Charge Sentinel Quick Settings.</description>
+    </key>
   </schema>
 </schemalist>

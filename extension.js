@@ -28,7 +28,7 @@ function readFile(path) {
     }
 }
 
-function findBattery() {
+function findBatteries() {
     let names;
     try {
         const directory = GLib.Dir.open(POWER_SUPPLY_ROOT, 0);
@@ -38,9 +38,10 @@ function findBattery() {
             names.push(name);
         names.sort();
     } catch {
-        return null;
+        return [];
     }
 
+    const batteries = [];
     for (const name of names) {
         const base = `${POWER_SUPPLY_ROOT}/${name}`;
         if (readFile(`${base}/type`) !== 'Battery')
@@ -49,19 +50,21 @@ function findBattery() {
             readFile(`${base}/charge_control_end_threshold`) === null)
             continue;
 
-        return {name, base};
+        batteries.push({name, base});
     }
 
-    return null;
+    return batteries;
 }
 
-function batteryState() {
-    const battery = findBattery();
+function batteryState(selectedBattery) {
+    const batteries = findBatteries();
+    const battery = batteries.find(item => item.name === selectedBattery) ?? batteries[0];
     if (!battery)
         return null;
 
     return {
         ...battery,
+        batteries,
         capacity: readFile(`${battery.base}/capacity`) ?? '–',
         status: readFile(`${battery.base}/status`) ?? 'Unknown',
         start: readFile(`${battery.base}/charge_control_start_threshold`) ?? '–',
@@ -102,6 +105,9 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
 
         this._statusItem = new PopupMenu.PopupMenuItem('Checking battery support…', {reactive: false});
         this.menu.addMenuItem(this._statusItem);
+        this._batteryMenu = new PopupMenu.PopupSubMenuMenuItem('Battery');
+        this._batteryMenu.visible = false;
+        this.menu.addMenuItem(this._batteryMenu);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         this._presetItems = [];
@@ -139,6 +145,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         this.menu._settingsActions[extension.uuid] = preferencesItem;
 
         this._settingsChangedId = this._settings.connect('changed::show-panel-icon', () => this._syncPanelIcon());
+        this._selectedBatteryChangedId = this._settings.connect('changed::selected-battery', () => this._refresh());
         this._refresh();
         this._refreshId = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
@@ -157,8 +164,23 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         this._resumeItem.visible = supported && canControlBehaviour && activeBehaviour !== 'auto';
     }
 
+    _syncBatteryMenu(batteries) {
+        this._batteryMenu.visible = batteries.length > 1;
+        this._batteryMenu.menu.removeAll();
+
+        for (const battery of batteries) {
+            const item = this._batteryMenu.menu.addAction(battery.name, () => {
+                this._settings.set_string('selected-battery', battery.name);
+            });
+            item.setOrnament(
+                PopupMenu.Ornament.CHECK,
+                battery.name === this._state.name,
+            );
+        }
+    }
+
     _refresh() {
-        this._state = batteryState();
+        this._state = batteryState(this._settings.get_string('selected-battery'));
         if (!this._state) {
             this.subtitle = 'Charge thresholds unavailable';
             this.iconName = 'battery-missing-symbolic';
@@ -168,6 +190,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
             return;
         }
 
+        this._syncBatteryMenu(this._state.batteries);
         const behaviour = currentBehaviour(this._state.behaviour);
         const held = Number(this._state.capacity) >= Number(this._state.end) &&
             this._state.status !== 'Charging';
@@ -177,7 +200,9 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
                 ? `Holding at ${this._state.end}%`
                 : this._state.status;
 
-        this.subtitle = `${this._state.capacity}% · ${stateText}`;
+        this.subtitle = this._state.batteries.length > 1
+            ? `${this._state.name}: ${this._state.capacity}% · ${stateText}`
+            : `${this._state.capacity}% · ${stateText}`;
         this.iconName = held || behaviour === 'inhibit-charge'
             ? 'battery-level-80-symbolic'
             : 'battery-good-symbolic';
@@ -249,6 +274,8 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
             GLib.Source.remove(this._refreshId);
         if (this._settingsChangedId)
             this._settings.disconnect(this._settingsChangedId);
+        if (this._selectedBatteryChangedId)
+            this._settings.disconnect(this._selectedBatteryChangedId);
         super.destroy();
     }
 });

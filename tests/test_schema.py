@@ -22,6 +22,14 @@ class ChargeSentinelSchemaTests(unittest.TestCase):
         self.assertEqual(ranges['custom-start'], {'min': '0', 'max': '99'})
         self.assertEqual(ranges['custom-end'], {'min': '1', 'max': '100'})
 
+    def test_selected_battery_setting_defaults_to_automatic_selection(self):
+        schema = element_tree.parse(SCHEMA_PATH).getroot()
+        selected_battery = schema.find(".//key[@name='selected-battery']")
+
+        self.assertIsNotNone(selected_battery)
+        self.assertEqual(selected_battery.attrib['type'], 's')
+        self.assertEqual(selected_battery.findtext('default'), "''")
+
 
 if __name__ == '__main__':
     unittest.main()
