@@ -37,6 +37,18 @@ class ChargeSentinelSchemaTests(unittest.TestCase):
         self.assertIn('Automatic (${this._state.name})', extension)
         self.assertIn("set_string('selected-battery', '')", extension)
 
+    def test_extension_marks_the_active_charge_profile(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('_syncProfileSelection()', extension)
+        self.assertIn('Apply custom limits (${customStart}% → ${customEnd}%)', extension)
+
+    def test_extension_disables_an_invalid_custom_charge_range(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('const customValid = customStart < customEnd;', extension)
+        self.assertIn('Custom limits need a lower start value', extension)
+
 
 if __name__ == '__main__':
     unittest.main()

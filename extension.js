@@ -119,7 +119,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
                 this._applyThresholds(preset.start, preset.end);
             });
             item.visible = false;
-            this._presetItems.push(item);
+            this._presetItems.push({item, preset});
         }
 
         this._customItem = this.menu.addAction('Apply custom limits', () => {
@@ -149,6 +149,10 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
 
         this._settingsChangedId = this._settings.connect('changed::show-panel-icon', () => this._syncPanelIcon());
         this._selectedBatteryChangedId = this._settings.connect('changed::selected-battery', () => this._refresh());
+        this._customThresholdChangedIds = [
+            this._settings.connect('changed::custom-start', () => this._refresh()),
+            this._settings.connect('changed::custom-end', () => this._refresh()),
+        ];
         this._refresh();
         this._refreshId = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
@@ -161,7 +165,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
     }
 
     _setActionVisibility(supported, canControlBehaviour, activeBehaviour) {
-        this._presetItems.forEach(item => item.visible = supported);
+        this._presetItems.forEach(({item}) => item.visible = supported);
         this._customItem.visible = supported;
         this._pauseItem.visible = supported && canControlBehaviour && activeBehaviour !== 'inhibit-charge';
         this._resumeItem.visible = supported && canControlBehaviour && activeBehaviour !== 'auto';
@@ -197,6 +201,30 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         }
     }
 
+    _syncProfileSelection() {
+        const start = Number(this._state.start);
+        const end = Number(this._state.end);
+        let presetSelected = false;
+
+        for (const {item, preset} of this._presetItems) {
+            const selected = start === preset.start && end === preset.end;
+            item.setOrnament(PopupMenu.Ornament.CHECK, selected);
+            presetSelected = presetSelected || selected;
+        }
+
+        const customStart = this._settings.get_uint('custom-start');
+        const customEnd = this._settings.get_uint('custom-end');
+        const customValid = customStart < customEnd;
+        this._customItem.label.text = customValid
+            ? `Apply custom limits (${customStart}% → ${customEnd}%)`
+            : 'Custom limits need a lower start value';
+        this._customItem.reactive = customValid;
+        this._customItem.setOrnament(
+            PopupMenu.Ornament.CHECK,
+            customValid && !presetSelected && start === customStart && end === customEnd,
+        );
+    }
+
     _refresh() {
         this._state = batteryState(this._settings.get_string('selected-battery'));
         if (!this._state) {
@@ -209,6 +237,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         }
 
         this._syncBatteryMenu(this._state.batteries);
+        this._syncProfileSelection();
         const behaviour = currentBehaviour(this._state.behaviour);
         const held = Number(this._state.capacity) >= Number(this._state.end) &&
             this._state.status !== 'Charging';
@@ -294,6 +323,8 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
             this._settings.disconnect(this._settingsChangedId);
         if (this._selectedBatteryChangedId)
             this._settings.disconnect(this._selectedBatteryChangedId);
+        for (const id of this._customThresholdChangedIds)
+            this._settings.disconnect(id);
         super.destroy();
     }
 });
