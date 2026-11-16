@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add automatic and explicit battery selection for multi-battery systems.
+- Show each supported battery's live charge and status in the Quick Settings picker.
+
 ## 0.1.1 — 2026-11-06
 
 - Require administrator privileges for every battery-controller write.

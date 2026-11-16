@@ -49,6 +49,10 @@ Fedora GNOME Shell extension
 
 The GNOME extension never runs as root. The helper only accepts a battery name discovered beneath `/sys/class/power_supply`, validates threshold ranges, and writes the two kernel-supported controls.
 
+On systems with more than one supported battery, the Quick Settings tile offers
+a battery picker. It shows each battery's current charge and status, and an
+**Automatic** option restores the default detected battery.
+
 ## Development
 
 Requirements: Fedora with GNOME Shell 50, `gjs`, `gnome-extensions`, `glib2`,
