@@ -97,6 +97,8 @@ charge-sentinel-doctor
 It reports missing package components and gives the exact next step without changing any charge setting.
 For automation, `charge-sentinel-doctor --check` emits the same JSON report and
 returns a non-zero status when the installation needs attention.
+The diagnostic also verifies the helper's capability module, which is required
+for privileged battery updates to start successfully.
 
 To build the RPM from a checkout:
 
