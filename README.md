@@ -56,6 +56,8 @@ a battery picker. It shows each battery's current charge and status, and an
 The active preset is marked in Quick Settings. Custom limits show their exact
 range and are disabled until the start value is lower than the stop value, so
 an invalid configuration never reaches the administrator helper.
+Use **Refresh battery status** to re-detect charge-threshold support immediately
+after a battery, dock, or firmware state changes.
 
 ## Development
 

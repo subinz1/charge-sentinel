@@ -6,6 +6,7 @@
 - Show each supported battery's live charge and status in the Quick Settings picker.
 - Mark the active charge profile and prevent invalid custom ranges from invoking the helper.
 - Add `charge-sentinel-doctor --check` for scriptable installation health checks.
+- Add a manual Quick Settings refresh for immediate hardware re-detection.
 
 ## 0.1.1 — 2026-11-06
 
