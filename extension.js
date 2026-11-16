@@ -50,7 +50,12 @@ function findBatteries() {
             readFile(`${base}/charge_control_end_threshold`) === null)
             continue;
 
-        batteries.push({name, base});
+        batteries.push({
+            name,
+            base,
+            capacity: readFile(`${base}/capacity`) ?? '–',
+            status: readFile(`${base}/status`) ?? 'Unknown',
+        });
     }
 
     return batteries;
@@ -65,8 +70,6 @@ function batteryState(selectedBattery) {
     return {
         ...battery,
         batteries,
-        capacity: readFile(`${battery.base}/capacity`) ?? '–',
-        status: readFile(`${battery.base}/status`) ?? 'Unknown',
         start: readFile(`${battery.base}/charge_control_start_threshold`) ?? '–',
         end: readFile(`${battery.base}/charge_control_end_threshold`) ?? '–',
         behaviour: readFile(`${battery.base}/charge_behaviour`) ?? '',
@@ -168,13 +171,28 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         this._batteryMenu.visible = batteries.length > 1;
         this._batteryMenu.menu.removeAll();
 
+        if (batteries.length <= 1)
+            return;
+
+        const selectedBattery = this._settings.get_string('selected-battery');
+        const automatic = !batteries.some(battery => battery.name === selectedBattery);
+        const automaticItem = this._batteryMenu.menu.addAction(
+            `Automatic (${this._state.name})`,
+            () => this._settings.set_string('selected-battery', ''),
+        );
+        automaticItem.setOrnament(PopupMenu.Ornament.CHECK, automatic);
+        this._batteryMenu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
         for (const battery of batteries) {
-            const item = this._batteryMenu.menu.addAction(battery.name, () => {
-                this._settings.set_string('selected-battery', battery.name);
-            });
+            const item = this._batteryMenu.menu.addAction(
+                `${battery.name} · ${battery.capacity}% · ${battery.status}`,
+                () => {
+                    this._settings.set_string('selected-battery', battery.name);
+                },
+            );
             item.setOrnament(
                 PopupMenu.Ornament.CHECK,
-                battery.name === this._state.name,
+                battery.name === selectedBattery,
             );
         }
     }

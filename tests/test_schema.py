@@ -8,6 +8,7 @@ SCHEMA_PATH = (
     / 'schemas'
     / 'org.gnome.shell.extensions.charge-sentinel.gschema.xml'
 )
+EXTENSION_PATH = Path(__file__).parents[1] / 'extension.js'
 
 
 class ChargeSentinelSchemaTests(unittest.TestCase):
@@ -29,6 +30,12 @@ class ChargeSentinelSchemaTests(unittest.TestCase):
         self.assertIsNotNone(selected_battery)
         self.assertEqual(selected_battery.attrib['type'], 's')
         self.assertEqual(selected_battery.findtext('default'), "''")
+
+    def test_multi_battery_menu_keeps_an_automatic_selection_option(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('Automatic (${this._state.name})', extension)
+        self.assertIn("set_string('selected-battery', '')", extension)
 
 
 if __name__ == '__main__':
