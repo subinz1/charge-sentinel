@@ -1,6 +1,6 @@
 Name:           charge-sentinel
 Version:        0.1.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        GNOME Quick Settings battery charge protection
 
 License:        MIT
@@ -11,6 +11,7 @@ BuildArch:      noarch
 BuildRequires:  glib2
 BuildRequires:  python3
 Requires:       gnome-shell >= 50
+Requires:       gnome-shell < 51
 Requires:       glib2
 Requires:       polkit
 Requires:       python3
@@ -58,6 +59,9 @@ python3 -m unittest discover -s tests -v
 %{_datadir}/polkit-1/actions/io.github.subinz1.charge-sentinel.policy
 
 %changelog
+* Sun Nov 16 2026 Charge Sentinel contributors - 0.1.1-2
+- Limit installation to the validated GNOME Shell 50 release line
+
 * Thu Nov 06 2026 Charge Sentinel contributors - 0.1.1-1
 - Harden threshold writes, diagnostics, and RPM verification
 
