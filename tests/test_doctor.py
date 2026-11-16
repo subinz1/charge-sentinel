@@ -1,8 +1,12 @@
 import importlib.util
+import io
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from unittest.mock import patch
 
 
 DOCTOR_PATH = Path(__file__).parents[1] / 'src' / 'charge-sentinel-doctor.py'
@@ -31,6 +35,28 @@ def unsupported_shell(arguments, **_kwargs):
 
 
 class ChargeSentinelDoctorTests(unittest.TestCase):
+    def test_check_mode_succeeds_for_a_healthy_installation(self):
+        output = io.StringIO()
+        with (
+            patch.object(sys, 'argv', ['charge-sentinel-doctor', '--check']),
+            patch.object(DOCTOR, 'diagnose', return_value={'healthy': True}),
+            redirect_stdout(output),
+        ):
+            self.assertEqual(DOCTOR.main(), 0)
+
+        self.assertEqual(output.getvalue(), '{\n  "healthy": true\n}\n')
+
+    def test_check_mode_fails_for_an_unhealthy_installation(self):
+        output = io.StringIO()
+        with (
+            patch.object(sys, 'argv', ['charge-sentinel-doctor', '--check']),
+            patch.object(DOCTOR, 'diagnose', return_value={'healthy': False}),
+            redirect_stdout(output),
+        ):
+            self.assertEqual(DOCTOR.main(), 1)
+
+        self.assertEqual(output.getvalue(), '{\n  "healthy": false\n}\n')
+
     def test_reports_a_fresh_session_that_has_not_seen_the_extension(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

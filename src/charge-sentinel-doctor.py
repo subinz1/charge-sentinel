@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 import re
@@ -95,5 +96,18 @@ def diagnose(
     }
 
 
+def main() -> int:
+    argument_parser = argparse.ArgumentParser(description=__doc__)
+    argument_parser.add_argument(
+        '--check',
+        action='store_true',
+        help='Exit with a non-zero status when the installation is unhealthy.',
+    )
+    arguments = argument_parser.parse_args()
+    result = diagnose()
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0 if result['healthy'] or not arguments.check else 1
+
+
 if __name__ == '__main__':
-    print(json.dumps(diagnose(), indent=2, sort_keys=True))
+    raise SystemExit(main())
