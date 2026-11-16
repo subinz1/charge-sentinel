@@ -4,6 +4,7 @@
 
 - Add automatic and explicit battery selection for multi-battery systems.
 - Show each supported battery's live charge and status in the Quick Settings picker.
+- Mark the active charge profile and prevent invalid custom ranges from invoking the helper.
 
 ## 0.1.1 — 2026-11-06
 

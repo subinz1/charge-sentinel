@@ -53,6 +53,10 @@ On systems with more than one supported battery, the Quick Settings tile offers
 a battery picker. It shows each battery's current charge and status, and an
 **Automatic** option restores the default detected battery.
 
+The active preset is marked in Quick Settings. Custom limits show their exact
+range and are disabled until the start value is lower than the stop value, so
+an invalid configuration never reaches the administrator helper.
+
 ## Development
 
 Requirements: Fedora with GNOME Shell 50, `gjs`, `gnome-extensions`, `glib2`,
