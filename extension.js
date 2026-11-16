@@ -108,6 +108,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
 
         this._statusItem = new PopupMenu.PopupMenuItem('Checking battery support…', {reactive: false});
         this.menu.addMenuItem(this._statusItem);
+        this._refreshItem = this.menu.addAction('Refresh battery status', () => this._refresh());
         this._batteryMenu = new PopupMenu.PopupSubMenuMenuItem('Battery');
         this._batteryMenu.visible = false;
         this.menu.addMenuItem(this._batteryMenu);
@@ -228,6 +229,7 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
     _refresh() {
         this._state = batteryState(this._settings.get_string('selected-battery'));
         if (!this._state) {
+            this._syncBatteryMenu([]);
             this.subtitle = 'Charge thresholds unavailable';
             this.iconName = 'battery-missing-symbolic';
             this._statusItem.label.text = 'This laptop does not expose safe Linux charge thresholds.';

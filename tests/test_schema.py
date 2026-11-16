@@ -49,6 +49,12 @@ class ChargeSentinelSchemaTests(unittest.TestCase):
         self.assertIn('const customValid = customStart < customEnd;', extension)
         self.assertIn('Custom limits need a lower start value', extension)
 
+    def test_extension_has_a_manual_battery_status_refresh(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn("addAction('Refresh battery status', () => this._refresh())", extension)
+        self.assertIn('this._syncBatteryMenu([]);', extension)
+
 
 if __name__ == '__main__':
     unittest.main()
