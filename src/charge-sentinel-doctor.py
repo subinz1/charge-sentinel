@@ -14,6 +14,7 @@ from typing import Callable
 UUID = 'charge-sentinel@subinz1.github.io'
 EXTENSION_ROOT = Path('/usr/share/gnome-shell/extensions') / UUID
 HELPER_PATH = Path('/usr/libexec/charge-sentinel-helper')
+HELPER_CAPABILITIES_PATH = Path('/usr/libexec/charge_sentinel_capabilities.py')
 POLKIT_POLICY = Path('/usr/share/polkit-1/actions/io.github.subinz1.charge-sentinel.policy')
 
 
@@ -57,12 +58,14 @@ def diagnose(
     helper_path: Path = HELPER_PATH,
     polkit_policy: Path = POLKIT_POLICY,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    helper_capabilities_path: Path = HELPER_CAPABILITIES_PATH,
 ) -> dict[str, object]:
     schema = extension_root / 'schemas' / 'gschemas.compiled'
     checks = {
         'extension_files': (extension_root / 'metadata.json').is_file() and (extension_root / 'extension.js').is_file(),
         'compiled_schema': schema.is_file(),
         'privileged_helper': helper_path.is_file() and helper_path.stat().st_mode & 0o111 != 0,
+        'helper_capabilities': helper_capabilities_path.is_file(),
         'polkit_policy': polkit_policy.is_file(),
     }
 
@@ -74,7 +77,16 @@ def diagnose(
     checks['supported_gnome_shell'] = shell_found and extension_supports_shell(extension_root, shell_version)
 
     actions: list[str] = []
-    if not all(checks[key] for key in ('extension_files', 'compiled_schema', 'privileged_helper', 'polkit_policy')):
+    if not all(
+        checks[key]
+        for key in (
+            'extension_files',
+            'compiled_schema',
+            'privileged_helper',
+            'helper_capabilities',
+            'polkit_policy',
+        )
+    ):
         actions.append('Reinstall the Charge Sentinel RPM to restore missing package files.')
     elif not shell_found:
         actions.append('Run this diagnostic from a GNOME session where gnome-shell is available.')

@@ -71,10 +71,12 @@ class ChargeSentinelDoctorTests(unittest.TestCase):
             helper = root / 'charge-sentinel-helper'
             helper.write_text('#!/bin/sh\n', encoding='utf-8')
             helper.chmod(0o755)
+            capabilities = root / 'charge_sentinel_capabilities.py'
+            capabilities.write_text('', encoding='utf-8')
             policy = root / 'charge-sentinel.policy'
             policy.write_text('<policyconfig/>', encoding='utf-8')
 
-            result = DOCTOR.diagnose(extension, helper, policy, completed)
+            result = DOCTOR.diagnose(extension, helper, policy, completed, capabilities)
 
         self.assertFalse(result['healthy'])
         self.assertTrue(result['checks']['extension_files'])
@@ -102,10 +104,12 @@ class ChargeSentinelDoctorTests(unittest.TestCase):
             helper = root / 'charge-sentinel-helper'
             helper.write_text('#!/bin/sh\n', encoding='utf-8')
             helper.chmod(0o755)
+            capabilities = root / 'charge_sentinel_capabilities.py'
+            capabilities.write_text('', encoding='utf-8')
             policy = root / 'charge-sentinel.policy'
             policy.write_text('<policyconfig/>', encoding='utf-8')
 
-            result = DOCTOR.diagnose(extension, helper, policy, disabled_extension)
+            result = DOCTOR.diagnose(extension, helper, policy, disabled_extension, capabilities)
 
         self.assertFalse(result['healthy'])
         self.assertTrue(result['checks']['extension_visible_to_current_session'])
@@ -126,11 +130,42 @@ class ChargeSentinelDoctorTests(unittest.TestCase):
             helper = root / 'charge-sentinel-helper'
             helper.write_text('#!/bin/sh\n', encoding='utf-8')
             helper.chmod(0o755)
+            capabilities = root / 'charge_sentinel_capabilities.py'
+            capabilities.write_text('', encoding='utf-8')
             policy = root / 'charge-sentinel.policy'
             policy.write_text('<policyconfig/>', encoding='utf-8')
 
-            result = DOCTOR.diagnose(extension, helper, policy, unsupported_shell)
+            result = DOCTOR.diagnose(extension, helper, policy, unsupported_shell, capabilities)
 
         self.assertFalse(result['healthy'])
         self.assertFalse(result['checks']['supported_gnome_shell'])
         self.assertIn('supports the current GNOME Shell version', result['next_steps'][0])
+
+    def test_reports_a_missing_helper_capability_module(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            extension = root / 'extension'
+            schema = extension / 'schemas'
+            schema.mkdir(parents=True)
+            (extension / 'metadata.json').write_text(
+                '{"shell-version": ["50"]}', encoding='utf-8'
+            )
+            (extension / 'extension.js').write_text('', encoding='utf-8')
+            (schema / 'gschemas.compiled').write_bytes(b'compiled')
+            helper = root / 'charge-sentinel-helper'
+            helper.write_text('#!/bin/sh\n', encoding='utf-8')
+            helper.chmod(0o755)
+            policy = root / 'charge-sentinel.policy'
+            policy.write_text('<policyconfig/>', encoding='utf-8')
+
+            result = DOCTOR.diagnose(
+                extension,
+                helper,
+                policy,
+                disabled_extension,
+                root / 'charge_sentinel_capabilities.py',
+            )
+
+        self.assertFalse(result['healthy'])
+        self.assertFalse(result['checks']['helper_capabilities'])
+        self.assertIn('Reinstall the Charge Sentinel RPM', result['next_steps'][0])
