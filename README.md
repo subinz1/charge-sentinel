@@ -93,6 +93,8 @@ charge-sentinel-doctor
 ```
 
 It reports missing package components and gives the exact next step without changing any charge setting.
+For automation, `charge-sentinel-doctor --check` emits the same JSON report and
+returns a non-zero status when the installation needs attention.
 
 To build the RPM from a checkout:
 
