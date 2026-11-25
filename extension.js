@@ -99,6 +99,8 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
         this._extension = extension;
         this._settings = extension.getSettings();
         this._state = null;
+        this._destroyed = false;
+        this._helperRunning = false;
 
         this.menu.setHeader(
             'battery-good-symbolic',
@@ -227,6 +229,9 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
     }
 
     _refresh() {
+        if (this._destroyed)
+            return;
+
         this._state = batteryState(this._settings.get_string('selected-battery'));
         if (!this._state) {
             this._syncBatteryMenu([]);
@@ -276,24 +281,42 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
     _runHelper(arguments_, successMessage) {
         if (!this._state)
             return;
+        if (this._helperRunning) {
+            this._statusItem.label.text = 'A charge change is already in progress.';
+            return;
+        }
 
         const argv = ['pkexec', HELPER_PATH, ...arguments_];
         let process;
         try {
-            process = Gio.Subprocess.new(argv, Gio.SubprocessFlags.NONE);
+            process = Gio.Subprocess.new(
+                argv,
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
+            );
         } catch (error) {
             this._statusItem.label.text = `Could not start Charge Sentinel: ${error.message}`;
             return;
         }
 
+        this._helperRunning = true;
         this._statusItem.label.text = 'Waiting for administrator permission…';
-        process.wait_check_async(null, (source, result) => {
+        process.communicate_utf8_async(null, null, (source, result) => {
+            if (this._destroyed)
+                return;
+
+            this._helperRunning = false;
             try {
-                source.wait_check_finish(result);
+                const [, stdout, stderr] = source.communicate_utf8_finish(result);
+                if (!source.get_successful()) {
+                    const detail = (stderr || stdout || 'The helper returned no diagnostic.').trim();
+                    throw new Error(detail);
+                }
                 this._statusItem.label.text = successMessage;
                 this._refresh();
-            } catch {
-                this._statusItem.label.text = 'The change was cancelled or could not be applied.';
+            } catch (error) {
+                const detail = String(error.message || 'The change was cancelled or could not be applied.')
+                    .replace(/^Charge Sentinel:\\s*/, '');
+                this._statusItem.label.text = `Could not apply change: ${detail}`;
             }
         });
     }
@@ -319,6 +342,8 @@ class ChargeSentinelToggle extends QuickSettings.QuickMenuToggle {
     }
 
     destroy() {
+        this._destroyed = true;
+        this._helperRunning = false;
         if (this._refreshId)
             GLib.Source.remove(this._refreshId);
         if (this._settingsChangedId)
