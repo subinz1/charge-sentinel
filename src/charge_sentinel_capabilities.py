@@ -130,14 +130,13 @@ def detect_windows(manufacturer: str, dell_command_path: str | None = None) -> C
         if dell_command_path:
             return ChargeCapabilities(
                 platform='windows',
-                state='supported',
+                state='requires-vendor-adapter',
                 adapter='dell-command-configure',
                 manufacturer=manufacturer,
-                reason='Dell Command | Configure provides documented custom battery thresholds.',
-                start_range=IntRange(50, 95),
-                end_range=IntRange(55, 100),
-                minimum_gap=5,
-                actions=('set-thresholds',),
+                reason=(
+                    'Dell Command | Configure is installed, but Charge Sentinel does not yet '
+                    'include a supported adapter for applying its battery configuration.'
+                ),
             )
         return ChargeCapabilities(
             platform='windows',

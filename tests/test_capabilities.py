@@ -55,11 +55,11 @@ class ChargeCapabilitiesTests(unittest.TestCase):
         self.assertEqual(capability.start_range.to_list(), [0, 99])
         self.assertIn('pause-charging', capability.actions)
 
-    def test_dell_windows_adapter_validates_its_own_range(self):
+    def test_dell_windows_requires_an_adapter_even_when_the_vendor_tool_is_present(self):
         capability = detect_windows('Dell Inc.', r'C:\\Program Files\\Dell\\cctk.exe')
-        self.assertEqual(capability.state, 'supported')
-        self.assertEqual(capability.start_range.to_list(), [50, 95])
-        self.assertEqual(capability.minimum_gap, 5)
+        self.assertEqual(capability.state, 'requires-vendor-adapter')
+        self.assertIsNone(capability.start_range)
+        self.assertEqual(capability.actions, ())
 
     def test_windows_lenovo_requires_a_dedicated_automation_adapter(self):
         capability = detect_windows('LENOVO')

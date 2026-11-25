@@ -18,7 +18,7 @@ Charge Sentinel uses a hardware-aware adapter model. A device is never marked as
 | --- | --- | --- | --- | --- |
 | Fedora and other Linux distributions | Linux sysfs | Standard `charge_control_start_threshold` and `charge_control_end_threshold` files | Driver-defined; ThinkPad `0–99%` start and `1–100%` stop | Supported now |
 | Fedora ThinkPads | `thinkpad_acpi` | Thresholds plus safe pause/resume where `inhibit-charge` is exposed | `0–99%` start, `1–100%` stop | Supported now |
-| Windows Dell | Dell Command \| Configure | Custom BIOS charge configuration | `50–95%` start, `55–100%` stop, minimum 5% gap | Supported after Dell tool detection |
+| Windows Dell | Dell Command \| Configure | Documented vendor configuration tool | `50–95%` start, `55–100%` stop, minimum 5% gap | Adapter not implemented |
 | Windows Lenovo | Lenovo Vantage | Vendor UI exposes thresholds on compatible models | Model-dependent | Detection only until a documented automation adapter is implemented |
 | Windows, other manufacturers | Windows generic | Battery reporting only | None | Unsupported for control |
 | macOS Tahoe 26.4+ on Apple silicon | macOS Charge Limit | Native System Settings control | `80–100%` stop only | Native-only |
@@ -34,7 +34,12 @@ The same percentage values are not portable:
 - macOS only supplies an upper charge limit, so it cannot implement a 20% lower threshold.
 - Consumer ChromeOS exposes a fixed 80% charge-limit mode rather than arbitrary values.
 
-The shared UI must request `capabilities`, render only compatible presets, and label unavailable choices with the reason. It must never silently substitute a different range.
+The Fedora GNOME extension exposes presets only when standard Linux threshold
+files are present. A driver may impose stricter vendor limits that sysfs does
+not expose as metadata; the root helper verifies the values after writing and
+restores the prior range if the controller rejects or adjusts the request.
+Future non-Linux clients must use their own adapter ranges and must not
+silently substitute a different range.
 
 ## References
 
