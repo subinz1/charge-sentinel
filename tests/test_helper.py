@@ -67,10 +67,35 @@ class ChargeSentinelHelperTests(unittest.TestCase):
 
         def fail_when_setting_start(path, value):
             if path.name == 'charge_control_start_threshold' and value == 96:
+                original_write_value(path, value)
                 raise HELPER.ChargeSentinelError('simulated firmware failure')
             original_write_value(path, value)
 
         HELPER.write_value = fail_when_setting_start
+        try:
+            with self.assertRaisesRegex(HELPER.ChargeSentinelError, 'previous values were restored'):
+                HELPER.set_thresholds('BAT0', 96, 100)
+        finally:
+            HELPER.write_value = original_write_value
+
+        self.assertEqual(
+            (self.battery / 'charge_control_start_threshold').read_text(encoding='utf-8'),
+            '75\n',
+        )
+        self.assertEqual(
+            (self.battery / 'charge_control_end_threshold').read_text(encoding='utf-8'),
+            '80\n',
+        )
+
+    def test_restores_thresholds_when_the_controller_silently_rejects_a_write(self):
+        original_write_value = HELPER.write_value
+
+        def ignore_start_threshold(path, value):
+            if path.name == 'charge_control_start_threshold' and value == 96:
+                return
+            original_write_value(path, value)
+
+        HELPER.write_value = ignore_start_threshold
         try:
             with self.assertRaisesRegex(HELPER.ChargeSentinelError, 'previous values were restored'):
                 HELPER.set_thresholds('BAT0', 96, 100)
@@ -97,6 +122,61 @@ class ChargeSentinelHelperTests(unittest.TestCase):
         result = HELPER.set_behaviour('BAT0', 'auto')
         self.assertEqual(result['battery'], 'BAT0')
         self.assertEqual((self.battery / 'charge_behaviour').read_text(encoding='utf-8'), 'auto\n')
+
+    def test_restores_the_previous_behaviour_when_the_controller_rejects_a_write(self):
+        original_write_value = HELPER.write_value
+
+        def ignore_inhibit_charge(path, value):
+            if path.name == 'charge_behaviour' and value == 'inhibit-charge':
+                return
+            original_write_value(path, value)
+
+        HELPER.write_value = ignore_inhibit_charge
+        try:
+            with self.assertRaisesRegex(HELPER.ChargeSentinelError, 'did not accept'):
+                HELPER.set_behaviour('BAT0', 'inhibit-charge')
+        finally:
+            HELPER.write_value = original_write_value
+
+        self.assertEqual((self.battery / 'charge_behaviour').read_text(encoding='utf-8'), 'auto\n')
+
+    def test_restores_the_previous_behaviour_when_readback_is_unavailable(self):
+        original_read_text = HELPER.read_text
+        behaviour_reads = 0
+
+        def fail_after_initial_behaviour_read(path):
+            nonlocal behaviour_reads
+            if path.name == 'charge_behaviour':
+                behaviour_reads += 1
+                if behaviour_reads == 2:
+                    raise OSError('controller unavailable')
+            return original_read_text(path)
+
+        HELPER.read_text = fail_after_initial_behaviour_read
+        try:
+            with self.assertRaisesRegex(HELPER.ChargeSentinelError, 'previous behaviour was restored'):
+                HELPER.set_behaviour('BAT0', 'inhibit-charge')
+        finally:
+            HELPER.read_text = original_read_text
+
+        self.assertEqual((self.battery / 'charge_behaviour').read_text(encoding='utf-8'), 'auto\n')
+
+    def test_status_skips_an_attribute_that_disappears_during_a_scan(self):
+        original_read_text = HELPER.read_text
+
+        def unavailable_capacity(path):
+            if path.name == 'capacity':
+                raise OSError('battery removed')
+            return original_read_text(path)
+
+        HELPER.read_text = unavailable_capacity
+        try:
+            result = HELPER.status()
+        finally:
+            HELPER.read_text = original_read_text
+
+        self.assertTrue(result['supported'])
+        self.assertNotIn('capacity', result['batteries'][0])
 
     def test_status_is_json_serializable(self):
         json.dumps(HELPER.status())

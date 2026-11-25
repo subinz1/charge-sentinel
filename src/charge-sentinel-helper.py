@@ -58,6 +58,13 @@ def validate_thresholds(start: int, end: int) -> None:
         raise ChargeSentinelError('Start threshold must be lower than the stop threshold.')
 
 
+def read_thresholds(start_path: Path, end_path: Path) -> tuple[int, int]:
+    try:
+        return int(read_text(start_path)), int(read_text(end_path))
+    except (OSError, ValueError) as error:
+        raise ChargeSentinelError('Could not read charge thresholds.') from error
+
+
 def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
     require_root()
     validate_thresholds(start, end)
@@ -65,11 +72,7 @@ def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
     start_path = battery / 'charge_control_start_threshold'
     end_path = battery / 'charge_control_end_threshold'
 
-    try:
-        current_start = int(read_text(start_path))
-        current_end = int(read_text(end_path))
-    except (OSError, ValueError) as error:
-        raise ChargeSentinelError('Could not read current charge thresholds.') from error
+    current_start, current_end = read_thresholds(start_path, end_path)
 
     # Keep every intermediate state valid while moving between presets.
     if start > current_end:
@@ -84,8 +87,12 @@ def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
         for path, value, previous_value in writes:
             if value == previous_value:
                 continue
-            write_value(path, value)
             applied.append((path, previous_value))
+            write_value(path, value)
+
+        applied_start, applied_end = read_thresholds(start_path, end_path)
+        if (applied_start, applied_end) != (start, end):
+            raise ChargeSentinelError('The battery controller did not accept the requested charge thresholds.')
     except ChargeSentinelError as error:
         rollback_errors: list[str] = []
         for path, previous_value in reversed(applied):
@@ -101,9 +108,18 @@ def set_thresholds(name: str, start: int, end: int) -> dict[str, int | str]:
 
     return {
         'battery': name,
-        'start': int(read_text(start_path)),
-        'end': int(read_text(end_path)),
+        'start': applied_start,
+        'end': applied_end,
     }
+
+
+def active_behaviour(value: str) -> str | None:
+    bracketed = [candidate[1:-1] for candidate in value.split() if candidate.startswith('[') and candidate.endswith(']')]
+    if len(bracketed) == 1 and bracketed[0] in SAFE_BEHAVIOURS:
+        return bracketed[0]
+
+    known = [candidate for candidate in value.split() if candidate in SAFE_BEHAVIOURS]
+    return known[0] if len(known) == 1 else None
 
 
 def set_behaviour(name: str, behaviour: str) -> dict[str, str]:
@@ -116,12 +132,39 @@ def set_behaviour(name: str, behaviour: str) -> dict[str, str]:
     if not behaviour_path.is_file():
         raise ChargeSentinelError('This battery does not support charge behaviour control.')
 
-    advertised = {value.strip('[]') for value in read_text(behaviour_path).split()}
+    try:
+        previous_value = read_text(behaviour_path)
+    except OSError as error:
+        raise ChargeSentinelError('Could not read supported charge behaviours.') from error
+
+    advertised = {value.strip('[]') for value in previous_value.split()}
     if behaviour not in advertised:
         raise ChargeSentinelError(f'The firmware does not support {behaviour}.')
 
     write_value(behaviour_path, behaviour)
-    return {'battery': name, 'behaviour': read_text(behaviour_path)}
+    try:
+        applied_value = read_text(behaviour_path)
+        verification_error = None
+    except OSError as error:
+        applied_value = ''
+        verification_error = error
+
+    if verification_error is not None or active_behaviour(applied_value) != behaviour:
+        previous_behaviour = active_behaviour(previous_value)
+        if previous_behaviour is not None:
+            try:
+                write_value(behaviour_path, previous_behaviour)
+            except ChargeSentinelError as error:
+                raise ChargeSentinelError(
+                    'Could not apply the requested charging behaviour or restore the previous behaviour.'
+                ) from error
+        if verification_error is not None:
+            raise ChargeSentinelError(
+                'Could not verify the requested charging behaviour; previous behaviour was restored.'
+            ) from verification_error
+        raise ChargeSentinelError('The battery controller did not accept the requested charging behaviour.')
+
+    return {'battery': name, 'behaviour': applied_value}
 
 
 def status() -> dict[str, object]:
@@ -137,7 +180,10 @@ def status() -> dict[str, object]:
         ):
             path = battery / attribute
             if path.is_file():
-                values[attribute] = read_text(path)
+                try:
+                    values[attribute] = read_text(path)
+                except OSError:
+                    continue
         items.append(values)
     return {
         'supported': bool(items),
