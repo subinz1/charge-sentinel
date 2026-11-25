@@ -9,6 +9,8 @@ SCHEMA_PATH = (
     / 'org.gnome.shell.extensions.charge-sentinel.gschema.xml'
 )
 EXTENSION_PATH = Path(__file__).parents[1] / 'extension.js'
+INSTALLER_PATH = Path(__file__).parents[1] / 'install.sh'
+RELEASE_WORKFLOW_PATH = Path(__file__).parents[1] / '.github' / 'workflows' / 'fedora-rpm.yml'
 
 
 class ChargeSentinelSchemaTests(unittest.TestCase):
@@ -54,6 +56,42 @@ class ChargeSentinelSchemaTests(unittest.TestCase):
 
         self.assertIn("addAction('Refresh battery status', () => this._refresh())", extension)
         self.assertIn('this._syncBatteryMenu([]);', extension)
+
+    def test_extension_preserves_helper_diagnostics_for_failed_changes(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE', extension)
+        self.assertIn('communicate_utf8_async', extension)
+        self.assertIn('Could not apply change:', extension)
+
+    def test_extension_ignores_helper_callbacks_after_it_is_destroyed(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('this._destroyed = false;', extension)
+        self.assertIn('if (this._destroyed)', extension)
+        self.assertIn('this._destroyed = true;', extension)
+
+    def test_extension_does_not_start_overlapping_privileged_changes(self):
+        extension = EXTENSION_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('this._helperRunning = false;', extension)
+        self.assertIn('if (this._helperRunning)', extension)
+        self.assertIn('A charge change is already in progress.', extension)
+
+    def test_local_installer_does_not_overwrite_an_rpm_installation(self):
+        installer = INSTALLER_PATH.read_text(encoding='utf-8')
+
+        self.assertIn('rpm -q charge-sentinel', installer)
+        self.assertIn('Update it with dnf instead of the local installer.', installer)
+
+    def test_release_workflow_validates_main_and_checks_extension_syntax(self):
+        workflow = RELEASE_WORKFLOW_PATH.read_text(encoding='utf-8')
+        makefile = (Path(__file__).parents[1] / 'Makefile').read_text(encoding='utf-8')
+
+        self.assertIn('branches:\n      - main', workflow)
+        self.assertIn('nodejs', workflow)
+        self.assertIn('node --check extension.js', makefile)
+        self.assertIn('node --check prefs.js', makefile)
 
 
 if __name__ == '__main__':

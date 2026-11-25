@@ -18,6 +18,8 @@ on:
       - 'Makefile'
       - '.github/workflows/fedora-rpm.yml'
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -32,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install RPM build tools
-        run: dnf install -y git glib2 make python3 rpm-build
+        run: dnf install -y git glib2 make nodejs python3 rpm-build
       - name: Build RPM
         run: make rpm
       - name: Verify RPM metadata and contents

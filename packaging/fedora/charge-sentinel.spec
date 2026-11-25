@@ -9,6 +9,7 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  glib2
+BuildRequires:  nodejs
 BuildRequires:  python3
 Requires:       gnome-shell >= 50
 Requires:       gnome-shell < 51

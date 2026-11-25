@@ -12,6 +12,8 @@ RPM_FILE := $(firstword $(wildcard $(RPM_TOPDIR)/RPMS/noarch/$(NAME)-*.noarch.rp
 validate:
 	glib-compile-schemas --strict --dry-run schemas
 	python3 -m py_compile src/charge-sentinel-helper.py src/charge-sentinel-capabilities.py src/charge-sentinel-doctor.py src/charge_sentinel_capabilities.py
+	node --check extension.js
+	node --check prefs.js
 	python3 -m unittest discover -s tests -v
 
 test:

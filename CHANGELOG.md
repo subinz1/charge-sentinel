@@ -8,6 +8,11 @@
 - Add `charge-sentinel-doctor --check` for scriptable installation health checks.
 - Add a manual Quick Settings refresh for immediate hardware re-detection.
 - Detect incomplete helper installations before the capability module can fail at runtime.
+- Verify threshold and charge-behaviour writes against the controller state and restore the prior setting on rejection.
+- Prevent overlapping privileged requests and surface helper failures in Quick Settings.
+- Mark non-Linux vendor capability records as unavailable until a supported adapter exists.
+- Prevent the local installer from overwriting an installed RPM.
+- Validate JavaScript syntax and RPM packaging for every merge to `main`.
 
 ## 0.1.1 — 2026-11-06
 
