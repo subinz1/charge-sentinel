@@ -18,9 +18,10 @@ The first fully functional target is Fedora with GNOME Shell 50 and modern
 ThinkPads. The extension metadata currently declares compatibility with GNOME
 Shell 50; later GNOME major versions require validation before they are claimed
 as supported. The helper auto-detects supported batteries before it writes
-anything. The project now has a shared capability model for Windows, macOS, and
-ChromeOS, so their different firmware limits are represented honestly rather
-than treated as generic controls. See [the platform support matrix](docs/platform-support.md).
+anything. The project includes a capability model for Windows, macOS, and
+ChromeOS so future adapters can represent their limits honestly, but the
+released application controls charge settings only through the supported Linux
+sysfs path. See [the platform support matrix](docs/platform-support.md).
 
 ## Presets
 
@@ -32,6 +33,10 @@ than treated as generic controls. See [the platform support matrix](docs/platfor
 | Travel | 96% | 100% | Maximum runtime for a trip |
 
 Users can set custom values as well. A wide range such as 20% → 100% is technically valid on supported ThinkPads, but it is not the default because it does not limit time spent at a high state of charge.
+
+Firmware may still reject a syntactically valid threshold. The helper reads
+back every update and restores the prior values if the requested range was not
+applied.
 
 ## Architecture
 
@@ -62,7 +67,7 @@ after a battery, dock, or firmware state changes.
 ## Development
 
 Requirements: Fedora with GNOME Shell 50, `gjs`, `gnome-extensions`, `glib2`,
-Python 3, and Polkit.
+Node.js, Python 3, and Polkit.
 
 ```bash
 make validate
@@ -116,6 +121,10 @@ bash install.sh
 ```
 
 This installs the extension for the current user and asks for administrator authentication only to install the root-owned helper and its Polkit rule. Restart the GNOME Shell session or log out and back in after installation on Wayland.
+
+Choose either the RPM or the local installer for a system. The local installer
+refuses to overwrite an RPM installation; update packaged installs with `dnf`
+instead.
 
 ## Current hardware support
 

@@ -6,6 +6,22 @@ uuid="charge-sentinel@subinz1.github.io"
 extension_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
 schema="schemas/org.gnome.shell.extensions.charge-sentinel.gschema.xml"
 
+if [[ "${1:-}" == "--help" ]]; then
+  printf 'Usage: %s\n' "${BASH_SOURCE[0]}"
+  printf 'Install Charge Sentinel from this checkout for the current user.\n'
+  exit 0
+fi
+
+if [[ $# -ne 0 ]]; then
+  printf 'Unexpected argument. Run %s --help for usage.\n' "${BASH_SOURCE[0]}" >&2
+  exit 2
+fi
+
+if command -v rpm >/dev/null && rpm -q charge-sentinel >/dev/null 2>&1; then
+  printf 'Charge Sentinel is already installed from an RPM. Update it with dnf instead of the local installer.\n' >&2
+  exit 1
+fi
+
 mkdir -p "$extension_dir/schemas"
 install -m 0644 "$root_dir/metadata.json" "$root_dir/extension.js" "$root_dir/prefs.js" "$extension_dir/"
 install -m 0644 "$root_dir/$schema" "$extension_dir/schemas/"
